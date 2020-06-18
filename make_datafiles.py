@@ -161,7 +161,7 @@ def write_to_bin(url_file, out_file, makevocab=False):
   if makevocab:
     vocab_counter = collections.Counter()
 
-  with open(out_file, 'wb') as writer:
+  with open(out_file, 'w+', encoding="utf-8") as writer:
     for idx,s in enumerate(story_fnames):
       if idx % 1000 == 0:
         print("Writing story %i of %i; %.2f percent done" % (idx, num_stories, float(idx)*100.0/float(num_stories)))
@@ -194,7 +194,7 @@ def write_to_bin(url_file, out_file, makevocab=False):
         "src":article,
         "tgt":abstract
       }
-      line = json.dumps(line)
+      line = json.dumps(line) + "\n"
       writer.write(line)
 
       # Write the vocab to file, if applicable
