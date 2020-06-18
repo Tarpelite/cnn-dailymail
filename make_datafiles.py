@@ -6,6 +6,7 @@ import subprocess
 import collections
 import tensorflow as tf
 from tensorflow.core.example import example_pb2
+import json
 
 
 dm_single_close_quote = u'\u2019' # unicode
@@ -142,6 +143,8 @@ def get_art_abs(story_file):
   article = ' '.join(article_lines)
 
   # Make abstract into a signle string, putting <s> and </s> tags around the sentences
+  # extract for highlights
+  highlights = highlights[0]
   abstract = ' '.join(["%s %s %s" % (SENTENCE_START, sent, SENTENCE_END) for sent in highlights])
 
   return article, abstract
@@ -180,13 +183,19 @@ def write_to_bin(url_file, out_file, makevocab=False):
       article, abstract = get_art_abs(story_file)
 
       # Write to tf.Example
-      tf_example = example_pb2.Example()
-      tf_example.features.feature['article'].bytes_list.value.extend([article.encode()])
-      tf_example.features.feature['abstract'].bytes_list.value.extend([abstract.encode()])
-      tf_example_str = tf_example.SerializeToString()
-      str_len = len(tf_example_str)
-      writer.write(struct.pack('q', str_len))
-      writer.write(struct.pack('%ds' % str_len, tf_example_str))
+      # tf_example = example_pb2.Example()
+      # tf_example.features.feature['article'].bytes_list.value.extend([article.encode()])
+      # tf_example.features.feature['abstract'].bytes_list.value.extend([abstract.encode()])
+      # tf_example_str = tf_example.SerializeToString()
+      # str_len = len(tf_example_str)
+      # writer.write(struct.pack('q', str_len))
+      # writer.write(struct.pack('%ds' % str_len, tf_example_str))
+      line = {
+        "src":article,
+        "tgt":abstract
+      }
+      line = json.dumps(line)
+      writer.write(line)
 
       # Write the vocab to file, if applicable
       if makevocab:
@@ -236,9 +245,9 @@ if __name__ == '__main__':
   tokenize_stories(dm_stories_dir, dm_tokenized_stories_dir)
 
   # Read the tokenized stories, do a little postprocessing then write to bin files
-  write_to_bin(all_test_urls, os.path.join(finished_files_dir, "test.bin"))
-  write_to_bin(all_val_urls, os.path.join(finished_files_dir, "val.bin"))
-  write_to_bin(all_train_urls, os.path.join(finished_files_dir, "train.bin"), makevocab=True)
+  write_to_bin(all_test_urls, os.path.join(finished_files_dir, "test.txt"))
+  write_to_bin(all_val_urls, os.path.join(finished_files_dir, "val.txt"))
+  write_to_bin(all_train_urls, os.path.join(finished_files_dir, "train.txt"), makevocab=True)
 
   # Chunk the data. This splits each of train.bin, val.bin and test.bin into smaller chunks, each containing e.g. 1000 examples, and saves them in finished_files/chunks
-  chunk_all()
+  # chunk_all()
